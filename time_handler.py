@@ -1,7 +1,3 @@
-"""Time converter logic"""
-from datetime import datetime
-
-
 intervals = (
     ('weeks', 604800),  # 60 * 60 * 24 * 7
     ('days', 86400),    # 60 * 60 * 24
@@ -18,11 +14,11 @@ def time_to_num(time_str: str) -> int:
     return ss + 60*(mm + 60*hh)
 
 
-def display_time(seconds: int, granularity: int = 3) -> int:
+def display_time(seconds: int, granularity: int = 3) -> str:
     """Time convertion function. From seconds to hour, minutes, seconds
     Granularity=3 [Hours, minutes, seconds]"""
-    # if seconds <= 0:
-    #     return "Something went wrong!"
+    if seconds <= 0:
+        return "TASK ABORTED!"
     result = []
 
     for name, count in intervals:

@@ -1,24 +1,13 @@
-from database import db
-from utils import clear
-import time
-
-
-USER_CHOICE = """
-Enter:
-- 'add' to add a new book
-- 'list' to list all book/s
-- 'done' to mark a book as done
-- 'not finished' to mark a book as not finished yet
-- 'update page' to update a book page
-- 'delete' to delete a book
-- 'quit' to quit
-Your choice: """
+from database import book_db
+from utilities.helper_funcs import clear, resolve_action
+from utilities.commands import BOOK_COMMANDS
+from utilities.delimiters import MEDIUM_DELIMITER, BIG_DELIMITER
 
 
 def book_menu():
     clear()
-    db.create_book_table()
-    user_input = input(USER_CHOICE)
+    book_db.create_book_table()
+    user_input = input(BOOK_COMMANDS)
     while user_input != 'quit':
         if user_input == 'add':
             clear()
@@ -28,66 +17,75 @@ def book_menu():
             list_books()
         elif user_input == 'done':
             clear()
-            db.mark_book_finished()
+            book_db.mark_book_finished()
         elif user_input == 'not finished':
             clear()
-            db.mark_book_not_finished()
+            book_db.mark_book_not_finished()
         elif user_input == 'delete':
             clear()
             prompt_delete_book()
         elif user_input == 'update page':
             clear()
-            db.update_book_page()
-        elif user_input == 'test':
-            db.test()
-        user_input = input(USER_CHOICE)
+            book_db.update_book_page()
+        else:
+            clear()
+            print("Invalid command!")
+        user_input = input(BOOK_COMMANDS)
     if user_input == "quit":
-        print("[Quting the book app and resolving to main screen...]")
-        print("\n")
+        clear()
+        print("[Quting the book app and resolving to TaskTrack app...]")
 
 
 def insert_book():
+    print("All currently available books: ")
+    for book in book_db.get_all_books():
+        print(f"{book['book_name']} by {book['book_author']}")
+        print(MEDIUM_DELIMITER)
     book_name = input("Enter book: ")
     book_author = input("Enter book author: ")
-    db.insert_book(book_name, book_author)
-    # Stupid but good fix for now
-    test_input = input("Resolve the program? : (Y): ")
+    book_db.insert_book(book_name, book_author)
+    resolve_action()
 
 
 def list_books():
-    clear()
-    for book in db.get_all_books():
-        # book[3] will be a falsy value (0) if not read
-        finished = 'Done' if book['finished'] else 'Not finished'
+    all_books = []
+    for book in book_db.get_all_books():
+        all_books.append(book)
+    if len(all_books) == 0:
+        print("No available books!")
+        resolve_action()
+        return -1
+    for book in book_db.get_all_books():
+        finished = 'FINISHED' if book['finished'] else 'NOT FINISHED'
         is_finished = book['current_page'] = 'FINISHED' if book['finished'] else book['current_page']
-        print("\n")
         print(
-            f"[Book]: {book['book_name']} [Author]: {book['book_author']} [CREATED]: {book['current_time']} Current page [{book['current_page']}] — Status: [ {finished} ]\n--------------------------------------------------\n\n[LAST UPDATED] [{book['time_stamp']}]")
-        print(50 * "-")
-    time.sleep(0.6)
-    # Stupid but good fix for now
-    test_input = input("Resolve the program? : (Y): ")
+            f"Book: {book['book_name']} from Author: {book['book_author']} is addded at: {book['current_time']}\
+ current page: [PAGE {is_finished}]\
+ [STATUS]: [{finished}]\n{BIG_DELIMITER}\n\
+[LAST UPDATED]: [{book['time_stamp']}]")
+        print(BIG_DELIMITER)
+    resolve_action()
 
 
 def prompt_delete_book():
     all_books = []
-    print("All current books:\n")
-    for book in db.get_all_books():
-        print(f"[ {book['book_name']} ]")
+    print("All current books: ")
+    for book in book_db.get_all_books():
+        print(f"Book: {book['book_name']} by author: {book['book_author']}")
+        print(BIG_DELIMITER)
         all_books.append(book['book_name'])
     if len(all_books) == 0:
-        print("No books!!!. Quiting")
+        print("No available books!")
+        resolve_action()
         return -1
-    print("---------------------------\n")
     name = input('Enter the name of the book you wish to delete: ')
-    for b in all_books:
+    for _ in all_books:
         if name not in all_books:
-            # print(all_books)
             print(
                 f"Sorry, the book '{name}' does not exist! Please double check")
+            resolve_action()
             return -1
     else:
-        db.delete_book(name)
+        book_db.delete_book(name)
         print(f"The book: [{name}] is succesfuly deleted!")
-        # Stupid but good fix for now
-        test_input = input("Resolve the program? : (Y): ")
+        resolve_action()
