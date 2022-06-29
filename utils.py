@@ -1,49 +1,15 @@
 import os
 from time_handler import time_to_num, display_time
-from datetime import date, datetime
-import time
-import sys
+from datetime import datetime
+from utilities.helper_funcs import clear, resolve_action
+from utilities.commands import DAYS_OF_WEEK
+from utilities.delimiters import BIG_DELIMITER, ULTRA_BIG_DELIMITER
+
 
 HOME_PATH = os.getcwd()  # get user main directory path
 
-commands = {
-    "track": "begin to track a activity",
-    "list": "list the content of selected txt file",
-    "time": "print current time in the console",
-    "clear": "clear output in the terminal",
-    "save": "save all content from txt file inside full_info.txt in the respective directory",
-    "quit": "quit the application",
-    "hours check": "list how much work is done for specific day",
-    "todo": "trigger todo app menu",
-    "book": "trigger book app menu",
-}
-
-
-def clear() -> None:
-    """Clears the input into the terminal"""
-    os.system("clear")
-
-
-def display_txt_files() -> None:
-    # most likely will need to refactor in some point of time
-    # It will quit the application if for example we use hours check in an empty directory, because there is nothing to check!
-    """Function to display all txt files inside the current directory"""
-    txt_files = []
-    for x in os.listdir():
-        if x.endswith(".txt"):
-            txt_files.append(x)
-    if len(txt_files) > 0:
-        print("All txt files:")
-        for txt in txt_files:
-            print(txt)
-    # if len(txt_files) == 0:
-    #     print(f"No txt files in directory {os.getcwd()}")
-    #     print("Exiting the program now!")
-    #     exit(-1)
-
 
 def display_work_directory_txt_files() -> None:
-    # cheap fix for now, to not quit when new working directory is generated for the current day
     """Function to display all txt files inside the current directory"""
     txt_files = []
     for x in os.listdir():
@@ -53,16 +19,12 @@ def display_work_directory_txt_files() -> None:
         print("All txt files:")
         for txt in txt_files:
             print(txt)
-    # if len(txt_files) == 0:
-    #     print(f"No txt files in directory {os.getcwd()}")
 
 
 def list_all_dirs() -> None:
     """Function to display all directories inside the current directory"""
     folder = os.getcwd()
-    subfolders = [f.name for f in os.scandir(folder) if f.is_dir()]
-    # clear()
-    print("\n")
+    subfolders = [f.name for f in os.scandir(folder) if f.is_dir() and f.name in DAYS_OF_WEEK]
     print("All directories: ")
     for folders in subfolders:
         print(folders)
@@ -73,15 +35,11 @@ def display_working_dir() -> None:
     print(f"current working directory is: {os.getcwd()}")
 
 
-def work_task_track() -> None:  # helper function now!
-    """This function when called write to a given .txt file the tasks that we are working on"""
+def write_task_to_file() -> None:  # helper function now!
+    """Write the given task to txt file"""
     clear()
-    display_work_directory_txt_files()
     text_file_name = datetime.today().strftime("%A")
     text_file_name += "_work_done.txt"  # extension
-    current_day = datetime.now().strftime("%A")
-    current_day_of_month = datetime.now().strftime("%B")
-    current_month = datetime.now().strftime("%d")
     work_beginning = input("Beginning of the day (Y/N)?: ")
     if work_beginning.lower() == "y":
         delimiter()
@@ -97,18 +55,16 @@ def work_task_track() -> None:  # helper function now!
         begin_time_int = time_to_num(begin_time)
         with open(text_file_name, "a", encoding="utf8") as file:
             file.write(
-                f"Current Day: {current_day} [{current_day_of_month} {current_month}]\nCURRENT_TASK -> [{user_input}] is started at: [{datetime.now().strftime('%B %d %Y %H:%M:%S')}]\n")
-            file.write(40 * "-")
-            file.write("\n")
+                f"Activity -> [{user_input}] is started at: [{datetime.now().strftime('%B %d %Y %H:%M:%S')}] | ")
         activity_end = input(
             f"Done with the current task [{user_input}]: Y/N ? : ")
     elif activity_begin.lower() == "n":
-        print(f"Task [ {user_input} ] aborted!")
+        print(f"Activity [{user_input}] aborted!")
         with open(text_file_name, "a", encoding="utf8") as file:
             file.write(
-                f"Current Day: {current_day} [{current_day_of_month} {current_month}]\nCURRENT_TASK -> [{user_input}] is aborted at: [{datetime.now().strftime('%B %d %Y %H:%M:%S')}]")
+                f"Activity -> [{user_input}] is ABORTED at: [{datetime.now().strftime('%B %d %Y %H:%M:%S')}]")
             file.write("\n")
-            file.write(40 * "-")
+            file.write(ULTRA_BIG_DELIMITER)
             file.write("\n")
         return -1
     elif activity_begin.lower() != "n" and activity_begin.lower() != "y":
@@ -118,21 +74,21 @@ def work_task_track() -> None:  # helper function now!
         end_time = datetime.now().strftime('%H:%M:%S')
         end_time_int = time_to_num(end_time)
         result = end_time_int - begin_time_int
-        print(f"Task finished! it took you: [ {display_time(result)} ]")
+        print(f"Task finished! Activity duration: [ {display_time(result)} ]")
 
         with open(text_file_name, "a", encoding="utf8") as file:
             file.write(
-                f"Current Day: {current_day} [{current_day_of_month} {current_month}]\nCURRENT_TASK -> [{user_input}] is finished at: [FINISHED {datetime.now().strftime('%B %d %Y %H:%M:%S')}] it took you: [{display_time(result)}]")
+                f"[FINISHED at {datetime.now().strftime('%B %d %Y %H:%M:%S')}] [{user_input}] took [{display_time(result)}]")
             file.write("\n")
-            file.write(40 * "-")
+            file.write(ULTRA_BIG_DELIMITER)
             file.write("\n")
     elif activity_end.lower() == "n":
         print(f"Task [ {user_input} ] aborted!")
         with open(text_file_name, "a", encoding="utf8") as file:
             file.write(
-                f"Current Day: {current_day} [{current_day_of_month} {current_month}]\nCURRENT_TASK -> [{user_input}] is aborted at: [{datetime.now().strftime('%B %d %Y %H:%M:%S')}]")
+                f"ABORTED at: [{datetime.now().strftime('%B %d %Y %H:%M:%S')}]")
             file.write("\n")
-            file.write(40 * "-")
+            file.write(ULTRA_BIG_DELIMITER)
             file.write("\n")
     elif activity_end.lower() != "y" and activity_end.lower() != "n":
         print("Invalid input please double check!")
@@ -146,37 +102,9 @@ def work_task_track() -> None:  # helper function now!
         print("Invalid input please double check!")
         return -1
 
-#************************#
-#   deprecate function
-#************************#
-# def create_work_directory() -> None:
-#     """This function create a new directory"""
-#     default_path = os.getcwd()  # better naming
-#     if default_path != HOME_PATH:
-#         os.chdir(HOME_PATH)
-#     list_all_dirs()
-#     current_exist_path = os.getcwd()
-#     print("\n")
-#     user_input = input("Enter the directory name: ")
-#     dir_name = user_input
-#     directory_path = os.getcwd()
-#     check_existing = os.path.join(directory_path, dir_name)
-#     # print(current_exist_path)
-#     # print(check_existing)
-#     check = os.path.exists(check_existing)
-#     if check:
-#         print(f"Sorry, the directory {dir_name} already exist!")
-#         return -1
-#     else:
-#         try:
-#             os.makedirs(dir_name, exist_ok=True)
-#             print(f"Directory {dir_name} is created succesfully!")
-#         except OSError as error:
-#             print(f"Directory {dir_name} already exist!")
 
-
-def work_task_creation() -> None:
-    """This function invoke work_task_track() and it's the core function of the program. Log and write the work tasks that we are doing to a .txt file"""  # main track function
+def dir_creation() -> None:
+    """Switch to the daily work directory. If directory does not exist, it creates one"""
     current_path = os.getcwd()
     print(current_path)
     if current_path != HOME_PATH:
@@ -186,63 +114,46 @@ def work_task_creation() -> None:
     destination_path = f"{current_path}/{current_day}"
     if current_day and os.path.exists(destination_path):
         os.chdir(destination_path)
-        print(f"Switched to {current_day} dir!")
-        work_task_track()
+        write_task_to_file()
     else:
-        print(f"{current_day} directory is missing!!!. Creating now....")
         os.makedirs(destination_path)
         os.chdir(destination_path)
-        work_task_track()
+        write_task_to_file()
 
 
 def list_tasks() -> None:
+    clear()
     """Listing all tasks in .txt file in certain directory"""
     default_path = os.getcwd()
     if default_path != HOME_PATH:
         os.chdir(HOME_PATH)
-    clear()
-    # list_all_txt()
     list_all_dirs()
-    print("\n")
+    print(BIG_DELIMITER)
     current_dir = os.getcwd()
     target_dir = ""
     custom_dir = input("Enter the name of the directory: ")
+    clear()
     custom_dir = custom_dir.title()
     target_dir += f"{current_dir}/{custom_dir}"
     if os.path.isdir(f"{custom_dir}"):
-        working_dir = os.chdir(target_dir)
+        os.chdir(target_dir)
     else:
         print(f"The directory {custom_dir} does not exist!")
         return -1
-    clear()
-    display_working_dir()
-    display_txt_files()
+    display_work_directory_txt_files()
     txt_input = input("Which txt file woud you like to list: ")
     txt_input += ".txt"
     try:
-        print("\n")
+        clear()
         with open(txt_input, "rt", encoding="utf8") as task_file:
             lines = task_file.readlines()
             if len(lines) == 0:
                 print("The file is empty")
-                print()
         for line in lines:
             print(line)
     except FileNotFoundError:
         print(f"Looks like the file {txt_input} does not exist!")
 
-
-def current_time() -> None:
-    """Output current month, day, year and time to the terminal"""
-    splitter = "*" * 50
-    clear()
-    time_now = datetime.now().strftime('%B %d %Y %H:%M:%S')
-    print(splitter)
-    print()
-    print(time_now)
-    print()
-    print(splitter)
-    time.sleep(0.6)
 
 
 def save_info() -> None:
@@ -251,31 +162,30 @@ def save_info() -> None:
     if default_path != HOME_PATH:
         os.chdir(HOME_PATH)
     clear()
-    # list_all_txt()
     list_all_dirs()
-    print("\n")
     current_dir = os.getcwd()
     target_dir = ""
     custom_dir = input("Enter the name of the directory: ")
     custom_dir = custom_dir.title()
     target_dir += f"{current_dir}/{custom_dir}"
     if os.path.isdir(f"{custom_dir}"):
-        working_dir = os.chdir(target_dir)
+        os.chdir(target_dir)
     else:
         print(f"The directory {custom_dir} does not exist!")
         return -1
-    display_txt_files()
+    display_work_directory_txt_files()
     filename = input(
-        "Enter the filename that you want to get and save the information: ")
+        "Enter the filename that you want to copy the information: ")
     filename += ".txt"
-
+    new_filename = input("Enter the name of the file, where the information will be saved: ")
+    new_filename += ".txt"
     try:
         with open(filename, "r", encoding="utf8") as file:
-            with open("full-info.txt", "a", encoding="utf8") as saved_info:
+            with open(new_filename, "a", encoding="utf8") as saved_info:
                 for line in file:
                     saved_info.write(line)
             print(
-                f"Succesfuly saved the content of {filename} saved into full-info.txt! inside: {os.getcwd()}")
+                f"Succesfuly saved the content of {filename} saved into {new_filename} inside: {os.getcwd()}")
     except FileNotFoundError:
         print(f"The file {filename} does not exist!")
 
@@ -286,29 +196,23 @@ def print_found_hours() -> None:
     if default_path != HOME_PATH:
         os.chdir(HOME_PATH)
     clear()
-    display_working_dir()
-    # list_all_txt()
     list_all_dirs()
-    print("\n")
     current_dir = os.getcwd()
     target_dir = ""
     custom_dir = input("Enter the name of the directory: ")
     custom_dir = custom_dir.capitalize()
     target_dir += f"{current_dir}/{custom_dir}"
     if os.path.isdir(f"{custom_dir}"):
-        working_dir = os.chdir(target_dir)
+        os.chdir(target_dir)
     else:
         print(f"The directory {custom_dir} does not exist!")
         return -1
     clear()
-    display_working_dir()
-    display_txt_files()
+    display_work_directory_txt_files()
     check_phrase_month = input("For which month you want to check?: ")
     check_phrase_day = input("For which day you want to check?: ")
-    # check_phrase_year to implement
-
-    phrase = f"FINISHED {check_phrase_month.capitalize()} {check_phrase_day}"
-    # print(phrase)
+    check_phrase_year = input("For wtich year you want to check: ")
+    phrase = f"FINISHED at {check_phrase_month.capitalize()} {check_phrase_day} {check_phrase_year}"
     filename = input("Enter the filename you need to check working hours: ")
     filename += ".txt"
     info = []
@@ -325,11 +229,13 @@ def print_found_hours() -> None:
             if prompt.lower() == "y":
                 location = os.getcwd()
                 os.chdir(location)
-                with open("tasks-completed.txt", "a", encoding="utf8") as file:
+                filename_with_worked_hours = f"{check_phrase_month}_{check_phrase_day}_{check_phrase_year}.txt"
+                with open(filename_with_worked_hours, "a", encoding="utf8") as file:
                     for i in info:
                         file.write(i)
-                        file.write("*" * 100)
+                        file.write(ULTRA_BIG_DELIMITER)
                         file.write("\n")
+                print("Information saved!")
             else:
                 print("Information not saved!")
     else:
@@ -338,7 +244,7 @@ def print_found_hours() -> None:
 
 
 def delimiter():
-    display_working_dir()
+    """Add delimiter to given work file"""
     text_file_name = datetime.today().strftime("%A")
     text_file_name += "_work_done.txt"  # extension
     current_day = datetime.now().strftime("%A")
@@ -346,17 +252,7 @@ def delimiter():
     current_month = datetime.now().strftime("%d")
     current_year = datetime.now().strftime("%Y")
     with open(text_file_name, "a", encoding="utf8") as file:
-        file.write("\n")
         file.write(
             f"{current_day} [{current_day_of_month} {current_month} {current_year}]".center(100, "="))
         file.write("\n")
         print("Delimiter added!")
-
-
-def print_commands() -> None:
-    """Print all available commands"""
-    clear()
-    print(40 * "*")
-    for key, value in commands.items():
-        print(f"{key} -> {value}\n")
-    print(40 * "*")

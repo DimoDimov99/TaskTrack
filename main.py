@@ -1,15 +1,16 @@
 from book import book_menu
 from todo import todo_menu
+from utilities.helper_funcs import clear
+from utilities.commands import print_commands
 from utils import *
 
 
-def mark_goal():
+def main():
+    """Entry function of the program"""
     if user_input == "track":
-        work_task_creation()
+        dir_creation()
     elif user_input == "list":
         list_tasks()
-    elif user_input == "time":
-        current_time()
     elif user_input == "clear":
         clear()
     elif user_input == "save":
@@ -31,6 +32,7 @@ if __name__ == "__main__":
     print(f"To see all available commands, type 'commands'!")
     user_input = input("Choose a command to begin: ").lower()
     while user_input != "quit":
-        mark_goal()
+        clear()
+        main()
         user_input = input("Choose a command to begin: ").lower()
     print("Quiting the app...")
